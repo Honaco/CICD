@@ -1,0 +1,50 @@
+stages:
+  - build
+  - code-style
+  - integration-test
+  - deploy
+
+build-do:
+  stage: build
+  script:
+    - cd code-samples
+    - make
+  after_script:
+    - chmod +x src/notify.sh
+    - ./src/notify.sh
+  artifacts:
+    paths:
+      - code-samples/DO
+    expire_in: 30 days
+
+style-check:
+  stage: code-style
+  script:
+    - cd code-samples
+    - clang-format -style=file:../materials/linters/.clang-format -n main.c --Werror
+  after_script:
+    - chmod +x src/notify.sh
+    - ./src/notify.sh
+
+integration-test:
+  stage: integration-test
+  dependencies:
+    - build-do
+  script:
+    - chmod +x src/integration_test.sh
+    - cd code-samples
+    - ../src/integration_test.sh
+  after_script:
+    - chmod +x src/notify.sh
+    - ./src/notify.sh
+
+deploy:
+  stage: deploy
+  dependencies:
+    - build-do
+  script:
+    - chmod +x src/deploy.sh
+    - ./src/deploy.sh
+  after_script:
+    - chmod +x src/notify.sh
+    - ./src/notify.sh
